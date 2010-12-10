@@ -50,7 +50,7 @@ def get_key(cachename, flavor=FLAVOR, version=CACHE_VERSION):
         key = cachename
     
     hashed = md5_constructor(key).hexdigest()
-    return ''.join((flavor, '-', version, '-', hashed))
+    return ''.join((flavor, '-', str(version), '-', hashed))
 
 KEY_FUNC = importlib.import_module(CACHE_KEY_MODULE).get_key
 
