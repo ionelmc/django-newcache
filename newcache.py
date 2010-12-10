@@ -5,8 +5,7 @@ import time
 from threading import local
 
 from django.core.cache.backends.base import BaseCache, InvalidCacheBackendError
-from django.utils.hashcompat import sha_constructor
-from django.utils.encoding import smart_str
+from django.utils.hashcompat import md5_constructor
 from django.conf import settings
 
 try:
@@ -41,11 +40,16 @@ class Marker(object):
 
 MARKER = Marker()
 
-def get_key(key):
+def get_key(cachename):
     """
     Returns a hashed, versioned, flavored version of the string that was input.
     """
-    hashed = sha_constructor(smart_str(key)).hexdigest()
+    if type(cachename) == unicode:
+        key = cachename.encode('utf-8')
+    else:
+        key = cachename
+    
+    hashed = md5_constructor(key).hexdigest()
     return ''.join((FLAVOR, '-', CACHE_VERSION, '-', hashed))
 
 key_func = importlib.import_module(CACHE_KEY_MODULE).get_key
