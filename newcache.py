@@ -40,7 +40,7 @@ class Marker(object):
 
 MARKER = Marker()
 
-def get_key(cachename):
+def get_key(cachename, flavor=FLAVOR, version=CACHE_VERSION):
     """
     Returns a hashed, versioned, flavored version of the string that was input.
     """
@@ -50,14 +50,14 @@ def get_key(cachename):
         key = cachename
     
     hashed = md5_constructor(key).hexdigest()
-    return ''.join((FLAVOR, '-', CACHE_VERSION, '-', hashed))
+    return ''.join((flavor, '-', version, '-', hashed))
 
 key_func = importlib.import_module(CACHE_KEY_MODULE).get_key
 
 class CacheClass(BaseCache):
 
-    def __init__(self, server, params):
-        super(CacheClass, self).__init__(params)
+    def __init__(self, server, params, key_prefix=FLAVOR, version=CACHE_VERSION, key_func=key_func):
+        super(CacheClass, self).__init__(params, key_prefix, version, key_func)
         self._servers = server.split(';')
         self._use_binary = bool(params.get('binary'))
         self._local = local()
@@ -136,10 +136,10 @@ class CacheClass(BaseCache):
         else:
             packed = value
             real_timeout = self._get_memcache_timeout(timeout)
-        return self._cache.add(key_func(key), packed, real_timeout)
+        return self._cache.add(self.make_key(key), packed, real_timeout)
 
     def get(self, key, default=None):
-        encoded_key = key_func(key)
+        encoded_key = self.make_key(key)
         packed = self._cache.get(encoded_key)
         if packed is None:
             return default
@@ -168,14 +168,14 @@ class CacheClass(BaseCache):
         else:
             packed = value
             real_timeout = self._get_memcache_timeout(timeout)
-        return self._cache.set(key_func(key), packed, real_timeout)
+        return self._cache.set(self.make_key(key), packed, real_timeout)
 
     def delete(self, key):
-        self._cache.delete(key_func(key))
+        self._cache.delete(self.make_key(key))
 
     def get_many(self, keys):
         # First, map all of the keys through our key function
-        rvals = map(key_func, keys)
+        rvals = map(self.make_key, keys)
         
         packed_resp = self._cache.get_multi(rvals)
         
@@ -213,15 +213,15 @@ class CacheClass(BaseCache):
     
     def set_many(self, data, timeout=None, herd=True):
         if herd and timeout != 0:
-            safe_data = dict(((key_func(k), self._pack_value(v, timeout))
+            safe_data = dict(((self.make_key(k), self._pack_value(v, timeout))
                 for k, v in data.iteritems()))
         else:
             safe_data = dict((
-                (key_func(k), v) for k, v in data.iteritems()))
+                (self.make_key(k), v) for k, v in data.iteritems()))
         self._cache.set_multi(safe_data, self._get_memcache_timeout(timeout))
     
     def delete_many(self, keys):
-        self._cache.delete_multi(map(key_func, keys))
+        self._cache.delete_multi(map(self.make_key, keys))
     
     def clear(self):
         self._cache.flush_all()
