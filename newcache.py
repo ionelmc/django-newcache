@@ -52,11 +52,14 @@ def get_key(cachename, flavor=FLAVOR, version=CACHE_VERSION):
     hashed = md5_constructor(key).hexdigest()
     return ''.join((flavor, '-', version, '-', hashed))
 
-key_func = importlib.import_module(CACHE_KEY_MODULE).get_key
+KEY_FUNC = importlib.import_module(CACHE_KEY_MODULE).get_key
 
 class CacheClass(BaseCache):
 
-    def __init__(self, server, params, key_prefix=FLAVOR, version=CACHE_VERSION, key_func=key_func):
+    def __init__(self, server, params, key_prefix=FLAVOR, version=CACHE_VERSION, key_func=None):
+        if not key_func:
+            key_func = KEY_FUNC
+        
         super(CacheClass, self).__init__(params, key_prefix, version, key_func)
         self._servers = server.split(';')
         self._use_binary = bool(params.get('binary'))
