@@ -170,3 +170,20 @@ class PyLibMCNewCache(BaseNewCache, PyLibMCCache):
         self._local.client = client
 
         return client
+
+class CacheClass(MemcachedNewCache):
+    def __init__(self, server, params):
+        import warnings
+        warnings.warn(
+            "newcache.CacheClass has been split into newcache.MemcachedNewCache and newcache.PyLibMCNewCache. Please update your cache backend setting.",
+            DeprecationWarning
+        )
+        try:
+            import memcache
+        except:
+            raise InvalidCacheBackendError(
+                "Memcached cache backend requires either the 'memcache' or 'cmemcache' library"
+                )
+        super(CacheClass, self).__init__(server, params,
+                                         library=memcache,
+                                         value_not_found_exception=ValueError)
