@@ -45,7 +45,7 @@ class BaseNewCache(BaseMemcachedCache):
             return unpacked, True
         return unpacked, False
 
-    def add(self, key, value, timeout=0, version=None, herd=True):
+    def add(self, key, value, timeout=None, version=None, herd=True):
         # If the user chooses to use the herd mechanism, then encode some
         # timestamp information into the object to be persisted into memcached
         if herd and timeout != 0:
@@ -63,7 +63,7 @@ class BaseNewCache(BaseMemcachedCache):
 
     def get(self, key, default=None, version=None):
         key = self.make_key(key, version=version)
-        packed = self._cache.get(encoded_key)
+        packed = self._cache.get(key)
         if packed is None:
             return default
 
@@ -79,7 +79,7 @@ class BaseNewCache(BaseMemcachedCache):
 
         return val
 
-    def set(self, key, value, timeout=0, version=None, herd=True):
+    def set(self, key, value, timeout=None, version=None, herd=True):
         # If the user chooses to use the herd mechanism, then encode some
         # timestamp information into the object to be persisted into memcached
         if herd and timeout != 0:
@@ -130,7 +130,7 @@ class BaseNewCache(BaseMemcachedCache):
 
         return dict(((reverse[k], v) for k, v in resp.iteritems()))
 
-    def set_many(self, data, timeout=0, version=None, herd=True):
+    def set_many(self, data, timeout=None, version=None, herd=True):
         safe_data = {}
         if herd and timeout != 0:
             for key, value in data.items():
