@@ -2,14 +2,14 @@ import os
 
 from setuptools import setup
 
-VERSION = '0.2.4'
+VERSION = '0.2.6'
 
 setup(
     name='django-newcache',
     version=VERSION,
     description='Improved memcached cache backend for Django',
     long_description=file(
-        os.path.join(os.path.dirname(__file__), 'README.txt')
+        os.path.join(os.path.dirname(__file__), 'README.mdown')
     ).read(),
     author='Eric Florenzano',
     author_email='floguy@gmail.com',
